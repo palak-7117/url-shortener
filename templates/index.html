@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SnapLink | Modern URL Shortener & QR</title>
+    <title>SwiftURL | Modern URL Shortener & QR</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -67,7 +67,7 @@
             border: 1px solid var(--border-color);
             box-shadow: 0 24px 50px rgba(0, 0, 0, 0.4);
             width: 100%;
-            max-width: 520px; /* Widened slightly to host the side-by-side layout nicely */
+            max-width: 520px;
             text-align: center;
             z-index: 10;
             box-sizing: border-box;
@@ -153,7 +153,6 @@
             box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
         }
 
-        /* Flexible Layout for Dashboard Link + QR Code Element */
         #result {
             margin-top: 28px;
             padding: 24px;
@@ -183,7 +182,6 @@
             font-weight: 600;
             font-size: 14px;
             margin-bottom: 12px;
-            grid-column: span 2;
         }
 
         .output-link-container {
@@ -213,7 +211,6 @@
             text-decoration: underline;
         }
 
-        /* QR Component Styles */
         .qr-wrapper {
             background: white;
             padding: 8px;
@@ -236,7 +233,7 @@
 <canvas id="particleCanvas"></canvas>
 
 <div class="container">
-    <h1>Snap<span>Link</span></h1>
+    <h1>Swift<span>URL</span></h1>
     <div class="subtitle">Shorten links & instantly generate QR codes</div>
     
     <div class="input-group">
@@ -255,7 +252,7 @@
 </div>
 
 <script>
-    // --- 1. POLKA-DOT BACKGROUND SYSTEM ---
+    // --- POLKA-DOT BACKGROUND SYSTEM ---
     const canvas = document.getElementById('particleCanvas');
     const ctx = canvas.getContext('2d');
 
@@ -316,8 +313,7 @@
     resizeCanvas();
     animate();
 
-
-    // --- 2. BACKEND CONNECTION & QR CODE GENERATION ---
+    // --- BACKEND CONNECTION & QR CODE GENERATION ---
     async function shortenLink() {
         const longUrl = document.getElementById('longUrl').value;
         const customAlias = document.getElementById('customAlias').value.trim();
@@ -339,10 +335,7 @@
 
             if (response.ok) {
                 resultDiv.style.display = "block";
-                
                 let messageHtml = data.message ? `<div class="notice-msg">✨ Already mapped!</div>` : "";
-                
-                // Fetch a generated QR code targeting the newly minted short link address
                 const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(data.short_url)}`;
 
                 resultDiv.innerHTML = `
