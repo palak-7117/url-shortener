@@ -59,19 +59,18 @@ def shorten_url():
             
         # Check SQLite to see if this exact alias already exists
         conn = sqlite3.connect(DB_NAME)
-        conn.row_factory = sqlite3.Row  # Crucial to access data by column name
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         existing = cursor.execute("SELECT long_url FROM urls WHERE short_code = ?", (short_code,)).fetchone()
         conn.close()
         
         if existing:
-            # --- THE SMART CHECK ---
             # If the alias exists AND points to the exact same website, return it gracefully!
             if existing['long_url'] == long_url:
                 return jsonify({
                     "message": "Hey! I already have this mapping. Here is your link:",
                     "long_url": long_url,
-                    "short_url": f"http://localhost:5000/{short_code}",
+                    "short_url": f"http://swifturl.com/{short_code}", # <-- Updated Domain
                     "short_code": short_code
                 }), 200
             else:
@@ -94,7 +93,7 @@ def shorten_url():
         
         return jsonify({
             "long_url": long_url,
-            "short_url": f"http://localhost:5000/{short_code}",
+            "short_url": f"http://swifturl.com/{short_code}", # <-- Updated Domain
             "short_code": short_code
         }), 201
     except sqlite3.IntegrityError:
@@ -107,22 +106,18 @@ def redirect_to_url(short_code):
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     
-    # 1. Fetch the long URL
     row = cursor.execute(
         "SELECT long_url FROM urls WHERE short_code = ?", 
         (short_code,)
     ).fetchone()
     
     if row:
-        # 2. Basic Click Counter: Increment the click count by +1
         cursor.execute(
             "UPDATE urls SET clicks = clicks + 1 WHERE short_code = ?", 
             (short_code,)
         )
         conn.commit()
         conn.close()
-        
-        # 3. Redirect the browser
         return redirect(row['long_url'], code=302)
     
     conn.close()
