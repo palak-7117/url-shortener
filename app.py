@@ -1,10 +1,14 @@
+import os
 import sqlite3
 import random
 import string
 from flask import Flask, request, jsonify, redirect, render_template
 
 app = Flask(__name__)
-DB_NAME = "urls.db"
+
+# --- FIX: FORCE ABSOLUTE PATH FOR THE DATABASE ON CLOUD SERVERS ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_NAME = os.path.join(BASE_DIR, "urls.db")
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
@@ -25,6 +29,7 @@ def generate_short_code(length=6):
     characters = string.ascii_letters + string.digits
     return ''.join(random.choice(characters) for _ in range(length))
 
+# Automatically initialize database structures
 init_db()
 
 @app.route('/')
@@ -43,15 +48,12 @@ def shorten_url():
     if not long_url:
         return jsonify({"error": "URL is required"}), 400
 
-    # --- FIX 1: STRICT URL VALIDATION ---
-    # Force prefix protocol
+    # --- PROTOCOL VALIDATION ---
     if not (long_url.startswith('http://') or long_url.startswith('https://')):
-        # If it doesn't even have a dot (e.g., "apple"), append .com safely
         if '.' not in long_url:
             long_url = long_url + '.com'
         long_url = 'https://' + long_url
     elif '.' not in long_url:
-        # If they typed http://apple, add .com
         long_url = long_url + '.com'
 
     if custom_alias:
@@ -67,11 +69,13 @@ def shorten_url():
         
         if existing:
             if existing['long_url'] == long_url:
+                # Dynamic protocol detection helper for link rendering
+                base_url = request.host_url.rstrip('/')
                 return jsonify({
                     "message": "Hey! I already have this mapping.",
                     "long_url": long_url,
                     "display_url": f"swifturl.com/{short_code}",
-                    "real_url": f"http://localhost:5000/{short_code}"
+                    "real_url": f"{base_url}/{short_code}"
                 }), 200
             else:
                 return jsonify({"error": f"The alias '{short_code}' is already taken!"}), 400
@@ -85,10 +89,11 @@ def shorten_url():
         conn.commit()
         conn.close()
         
+        base_url = request.host_url.rstrip('/')
         return jsonify({
             "long_url": long_url,
             "display_url": f"swifturl.com/{short_code}",
-            "real_url": f"http://localhost:5000/{short_code}"
+            "real_url": f"{base_url}/{short_code}"
         }), 201
     except sqlite3.IntegrityError:
         return jsonify({"error": "A conflict occurred, please try again."}), 500
@@ -112,3 +117,6 @@ def redirect_to_url(short_code):
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
+
+if __name__ == '__main__':
+    app.run()
