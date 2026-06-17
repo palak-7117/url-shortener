@@ -3,74 +3,321 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sleek URL Shortener</title>
+    <title>SnapLink | Modern URL Shortener & QR</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --card-bg: rgba(30, 41, 59, 0.65);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --accent-primary: #6366f1;
+            --accent-secondary: #a855f7;
+            --success-color: #10b981;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
         }
+
+        #particleCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            filter: blur(130px);
+            opacity: 0.15;
+            z-index: 0;
+        }
+        body::before { top: 10%; left: 15%; background: var(--accent-primary); }
+        body::after { bottom: 10%; right: 15%; background: var(--accent-secondary); }
+
         .container {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 520px; /* Widened slightly to host the side-by-side layout nicely */
             text-align: center;
-            width: 400px;
+            z-index: 10;
+            box-sizing: border-box;
         }
-        h1 { color: #333; margin-bottom: 20px; }
+
+        h1 {
+            color: var(--text-primary);
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        h1 span {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 32px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            margin-left: 4px;
+        }
+
         input {
-            width: 90%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: inherit;
             font-size: 14px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
         }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+            background: rgba(15, 23, 42, 0.85);
+        }
+
+        input::placeholder {
+            color: #475569;
+        }
+
         button {
-            background-color: #007bff;
+            background: var(--accent-gradient);
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            width: 96%;
-        }
-        button:hover { background-color: #0056b3; }
-        #result {
-            margin-top: 20px;
             padding: 15px;
-            background: #e9f5ff;
-            border-radius: 6px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
+        }
+
+        /* Flexible Layout for Dashboard Link + QR Code Element */
+        #result {
+            margin-top: 28px;
+            padding: 24px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
             display: none;
-            word-break: break-all;
+            box-sizing: border-box;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .result-layout {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
             text-align: left;
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .notice-msg {
-            color: #28a745;
-            font-weight: bold;
-            font-size: 13px;
-            margin-bottom: 8px;
+            color: var(--success-color);
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 12px;
+            grid-column: span 2;
+        }
+
+        .output-link-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .output-label {
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .short-url-link {
+            color: #818cf8;
+            font-size: 18px;
+            font-weight: 600;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .short-url-link:hover {
+            color: #a78bfa;
+            text-decoration: underline;
+        }
+
+        /* QR Component Styles */
+        .qr-wrapper {
+            background: white;
+            padding: 8px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .qr-wrapper img {
+            width: 110px;
+            height: 110px;
+            display: block;
         }
     </style>
 </head>
 <body>
 
+<canvas id="particleCanvas"></canvas>
+
 <div class="container">
-    <h1>URL Shortener</h1>
-    <input type="url" id="longUrl" placeholder="Paste your long link here..." required>
-    <input type="text" id="customAlias" placeholder="Custom Alias (e.g., myportfolio) - Optional">
+    <h1>Snap<span>Link</span></h1>
+    <div class="subtitle">Shorten links & instantly generate QR codes</div>
+    
+    <div class="input-group">
+        <label for="longUrl">Destination URL</label>
+        <input type="url" id="longUrl" placeholder="https://example.com/very-long-link" required>
+    </div>
+    
+    <div class="input-group">
+        <label for="customAlias">Custom Alias (Optional)</label>
+        <input type="text" id="customAlias" placeholder="e.g., myportfolio">
+    </div>
+    
     <button onclick="shortenLink()">Shorten URL</button>
     
     <div id="result"></div>
 </div>
 
 <script>
+    // --- 1. POLKA-DOT BACKGROUND SYSTEM ---
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let mouseX = 0, mouseY = 0, targetMouseX = 0, targetMouseY = 0;
+    const dots = [];
+    const dotSpacing = 45;
+    const baseRadius = 1.5;
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        initDots();
+    }
+
+    class Dot {
+        constructor(x, y) { this.baseX = x; this.baseY = y; this.x = x; this.y = y; }
+        update() {
+            const dx = mouseX - this.baseX;
+            const dy = mouseY - this.baseY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const maxDistance = 180; 
+            if (distance < maxDistance) {
+                const force = (maxDistance - distance) / maxDistance;
+                this.x = this.baseX - (dx / distance) * force * 15;
+                this.y = this.baseY - (dy / distance) * force * 15;
+            } else {
+                this.x += (this.baseX - this.x) * 0.1;
+                this.y += (this.baseY - this.y) * 0.1;
+            }
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, baseRadius, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+            ctx.fill();
+        }
+    }
+
+    function initDots() {
+        dots.length = 0;
+        for (let x = dotSpacing / 2; x < canvas.width; x += dotSpacing) {
+            for (let y = dotSpacing / 2; y < canvas.height; y += dotSpacing) {
+                dots.push(new Dot(x, y));
+            }
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        mouseX += (targetMouseX - mouseX) * 0.08;
+        mouseY += (targetMouseY - mouseY) * 0.08;
+        dots.forEach(dot => { dot.update(); dot.draw(); });
+        requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('mousemove', (e) => { targetMouseX = e.clientX; targetMouseY = e.clientY; });
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    animate();
+
+
+    // --- 2. BACKEND CONNECTION & QR CODE GENERATION ---
     async function shortenLink() {
         const longUrl = document.getElementById('longUrl').value;
         const customAlias = document.getElementById('customAlias').value.trim();
@@ -85,10 +332,7 @@
             const response = await fetch('/shorten', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    long_url: longUrl,
-                    custom_alias: customAlias
-                })
+                body: JSON.stringify({ long_url: longUrl, custom_alias: customAlias })
             });
 
             const data = await response.json();
@@ -96,14 +340,22 @@
             if (response.ok) {
                 resultDiv.style.display = "block";
                 
-                let messageHtml = "";
-                if (data.message) {
-                    messageHtml = `<div class="notice-msg">✨ ${data.message}</div>`;
-                }
+                let messageHtml = data.message ? `<div class="notice-msg">✨ Already mapped!</div>` : "";
+                
+                // Fetch a generated QR code targeting the newly minted short link address
+                const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(data.short_url)}`;
 
                 resultDiv.innerHTML = `
                     ${messageHtml}
-                    <strong>Short Link:</strong> <a href="${data.short_url}" target="_blank">${data.short_url}</a>
+                    <div class="result-layout">
+                        <div class="output-link-container">
+                            <div class="output-label">Your Shortened Link</div>
+                            <a href="${data.short_url}" target="_blank" class="short-url-link">${data.short_url}</a>
+                        </div>
+                        <div class="qr-wrapper">
+                            <img src="${qrCodeUrl}" alt="Link QR Code">
+                        </div>
+                    </div>
                 `;
             } else {
                 alert("Error: " + data.error);
