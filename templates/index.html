@@ -10,16 +10,16 @@
     
     <style>
         :root {
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-            --card-bg: rgba(30, 41, 59, 0.65);
-            --border-color: rgba(255, 255, 255, 0.08);
+            /* --- CYBERPUNK / SYNTHWAVE COLOR CONFIGURATION --- */
+            --bg-gradient: linear-gradient(135deg, #070a13 0%, #0f051d 100%);
+            --card-bg: rgba(15, 23, 42, 0.65);
+            --border-color: rgba(6, 182, 212, 0.15);
             --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
             --accent-gradient: linear-gradient(135deg, #06b6d4 0%, #d946ef 100%);
             --accent-primary: #06b6d4;
             --accent-secondary: #d946ef;
-            --accent-primary: #6366f1;
-            --accent-secondary: #a855f7;
-            --success-color: #10b981;
+            --success-color: #22c55e;
         }
 
         body {
@@ -34,7 +34,6 @@
             box-sizing: border-box;
             position: relative;
             overflow: hidden;
-            /* Enable 3D depth perspective for the child card container */
             perspective: 1000px;
         }
 
@@ -48,6 +47,7 @@
             pointer-events: none;
         }
 
+        /* Ambient Cyber Neon Orbs */
         body::before, body::after {
             content: '';
             position: absolute;
@@ -61,7 +61,6 @@
         body::before { top: 10%; left: 15%; background: var(--accent-primary); }
         body::after { bottom: 10%; right: 15%; background: var(--accent-secondary); }
 
-        /* The Main 3D Tilting Card Container */
         .container {
             background: var(--card-bg);
             backdrop-filter: blur(20px);
@@ -69,14 +68,12 @@
             padding: 40px;
             border-radius: 24px;
             border: 1px solid var(--border-color);
-            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.5);
             width: 100%;
             max-width: 520px;
             text-align: center;
             z-index: 10;
             box-sizing: border-box;
-            
-            /* Smooth reset transition when mouse leaves the card area */
             transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
             transform-style: preserve-3d;
         }
@@ -88,7 +85,7 @@
             margin-top: 0;
             margin-bottom: 8px;
             letter-spacing: -0.5px;
-            transform: translateZ(20px); /* Pushes header outwards in 3D layer */
+            transform: translateZ(20px);
         }
 
         h1 span {
@@ -135,11 +132,13 @@
         input:focus {
             outline: none;
             border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
             background: rgba(15, 23, 42, 0.85);
         }
 
-        input::placeholder { color: #475569; }
+        input::placeholder {
+            color: #475569;
+        }
 
         button.submit-btn {
             background: var(--accent-gradient);
@@ -153,21 +152,21 @@
             font-weight: 600;
             width: 100%;
             margin-top: 10px;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
             transition: all 0.2s ease;
             transform: translateZ(15px);
         }
 
         button.submit-btn:hover {
             transform: translateZ(20px) translateY(-1px);
-            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
+            box-shadow: 0 6px 20px rgba(217, 70, 239, 0.4);
         }
 
         #result {
             margin-top: 28px;
             padding: 24px;
             background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(6, 182, 212, 0.2);
             border-radius: 16px;
             display: none;
             box-sizing: border-box;
@@ -189,7 +188,7 @@
         }
 
         .notice-msg {
-            color: var(--success-color);
+            color: var(--accent-primary);
             font-weight: 600;
             font-size: 14px;
             margin-bottom: 12px;
@@ -209,7 +208,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Inline Row layout to position the Copy Button right next to the link string */
         .link-action-row {
             display: flex;
             align-items: center;
@@ -218,18 +216,22 @@
         }
 
         .short-url-link {
-            color: #818cf8;
+            color: #22d3ee;
             font-size: 18px;
             font-weight: 600;
             text-decoration: none;
             word-break: break-all;
         }
 
-        /* The Premium Mini Copy Button Style */
+        .short-url-link:hover {
+            color: #f472b6;
+            text-decoration: underline;
+        }
+
         .copy-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--text-secondary);
+            background: rgba(6, 182, 212, 0.08);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            color: #22d3ee;
             padding: 6px 12px;
             border-radius: 8px;
             font-family: inherit;
@@ -241,16 +243,15 @@
         }
 
         .copy-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            color: var(--text-primary);
-            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(217, 70, 239, 0.15);
+            color: #f472b6;
+            border-color: rgba(217, 70, 239, 0.4);
         }
 
-        /* Success Active State applied via JavaScript dynamically */
         .copy-btn.copied {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--success-color);
-            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border-color: #22c55e;
         }
 
         .qr-wrapper {
@@ -260,7 +261,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
         }
 
         .qr-wrapper img {
@@ -294,7 +295,7 @@
 </div>
 
 <script>
-    // --- 1. INTERACTIVE MOUSE POLKA-DOT BACKGROUND SYSTEM ---
+    // --- 1. POLKA-DOT BACKGROUND SYSTEM (Cyber Toned) ---
     const canvas = document.getElementById('particleCanvas');
     const ctx = canvas.getContext('2d');
 
@@ -328,7 +329,7 @@
         draw() {
             ctx.beginPath();
             ctx.arc(this.x, this.y, baseRadius, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+            ctx.fillStyle = 'rgba(6, 182, 212, 0.15)';
             ctx.fill();
         }
     }
@@ -355,51 +356,35 @@
     resizeCanvas();
     animate();
 
-
-    // --- 2. OPTION 3: 3D GLASSMORPHISM TILT LOGIC SYSTEM ---
+    // --- 2. 3D TILT SYSTEM ---
     const card = document.getElementById('tiltCard');
-
     card.addEventListener('mousemove', (e) => {
         const cardRect = card.getBoundingClientRect();
-        
-        // Find cursor offset coordinate relative directly to center of container card box
         const cardX = e.clientX - cardRect.left - cardRect.width / 2;
         const cardY = e.clientY - cardRect.top - cardRect.height / 2;
-        
-        // Divide axis coordinates to scale maximum rotational rotation to ~10 degrees
         const angleX = -(cardY / cardRect.height) * 20;
         const angleY = (cardX / cardRect.width) * 20;
-        
         card.style.transform = `rotateX(${angleX}deg) rotateY(${angleY}deg) scale3d(1.02, 1.02, 1.02)`;
-        card.style.boxShadow = `${-angleY * 1.5}px ${angleX * 1.5}px 40px rgba(0, 0, 0, 0.6)`;
+        card.style.boxShadow = `${-angleY * 1.5}px ${angleX * 1.5}px 40px rgba(217, 70, 239, 0.2)`;
     });
-
-    // Reset back perfectly flush when cursor sails outside card bounds
     card.addEventListener('mouseleave', () => {
         card.style.transform = 'rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
-        card.style.boxShadow = '0 24px 50px rgba(0, 0, 0, 0.4)';
+        card.style.boxShadow = '0 24px 50px rgba(0, 0, 0, 0.5)';
     });
 
-
-    // --- 3. OPTION 1: ANIMATED COPY LOGIC ACTION FUNCTION ---
+    // --- 3. COPY TO CLIPBOARD ANIMATION ---
     function copyLink(textToCopy, buttonElement) {
         navigator.clipboard.writeText(textToCopy).then(() => {
-            // Apply visual validation class state variables
             buttonElement.classList.add('copied');
             buttonElement.innerText = "✓ Copied!";
-            
-            // Revert configuration styling details back softly after a brief duration
             setTimeout(() => {
                 buttonElement.classList.remove('copied');
                 buttonElement.innerText = "Copy";
             }, 2000);
-        }).catch(err => {
-            alert("Failed to auto-copy link string.");
-        });
+        }).catch(err => { alert("Failed to copy link."); });
     }
 
-
-    // --- 4. BACKEND CONTEXT ROUTING CONNECTIONS ---
+    // --- 4. BACKEND FLASK CONNECTIONS ---
     async function shortenLink() {
         const longUrl = document.getElementById('longUrl').value;
         const customAlias = document.getElementById('customAlias').value.trim();
@@ -422,7 +407,7 @@
             if (response.ok) {
                 resultDiv.style.display = "block";
                 let messageHtml = data.message ? `<div class="notice-msg">✨ Already mapped!</div>` : "";
-                const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(data.short_url)}`;
+                const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(data.real_url)}`;
 
                 resultDiv.innerHTML = `
                     ${messageHtml}
@@ -430,8 +415,8 @@
                         <div class="output-link-container">
                             <div class="output-label">Your Shortened Link</div>
                             <div class="link-action-row">
-                                <a href="${data.short_url}" target="_blank" class="short-url-link">${data.short_url}</a>
-                                <button class="copy-btn" onclick="copyLink('${data.short_url}', this)">Copy</button>
+                                <a href="${data.real_url}" target="_blank" class="short-url-link">${data.display_url}</a>
+                                <button class="copy-btn" onclick="copyLink('${data.real_url}', this)">Copy</button>
                             </div>
                         </div>
                         <div class="qr-wrapper">
