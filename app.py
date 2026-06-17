@@ -35,25 +35,53 @@ init_db()
 def home():
     return render_template('index.html')
 
-# --- ROUTE 2: SHORTEN A LINK (API) ---
+# --- ROUTE 2: SMART SHORTEN A LINK (API) ---
 @app.route('/shorten', methods=['POST'])
 def shorten_url():
-    # Get the long URL from the client request
     data = request.get_json()
     
-    # Simple safety check if data is empty
     if not data:
         return jsonify({"error": "Invalid JSON request"}), 400
         
     long_url = data.get('long_url')
-    
+    custom_alias = data.get('custom_alias')
+
     if not long_url:
         return jsonify({"error": "URL is required"}), 400
 
-    # Generate a unique short code
-    short_code = generate_short_code()
+    # Determine the short code to use
+    if custom_alias:
+        # Clean the input to keep the URL safe
+        short_code = "".join(x for x in custom_alias if x.isalnum())
+        
+        if not short_code:
+            return jsonify({"error": "Alias can only contain letters and numbers"}), 400
+            
+        # Check SQLite to see if this exact alias already exists
+        conn = sqlite3.connect(DB_NAME)
+        conn.row_factory = sqlite3.Row  # Crucial to access data by column name
+        cursor = conn.cursor()
+        existing = cursor.execute("SELECT long_url FROM urls WHERE short_code = ?", (short_code,)).fetchone()
+        conn.close()
+        
+        if existing:
+            # --- THE SMART CHECK ---
+            # If the alias exists AND points to the exact same website, return it gracefully!
+            if existing['long_url'] == long_url:
+                return jsonify({
+                    "message": "Hey! I already have this mapping. Here is your link:",
+                    "long_url": long_url,
+                    "short_url": f"http://localhost:5000/{short_code}",
+                    "short_code": short_code
+                }), 200
+            else:
+                # The alias exists but belongs to a completely different web address
+                return jsonify({"error": f"The alias '{short_code}' is already taken by a different URL!"}), 400
+    else:
+        # If no custom alias was given, generate a random one
+        short_code = generate_short_code()
     
-    # Save to SQLite
+    # Save a brand new entry to SQLite
     try:
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
@@ -64,14 +92,13 @@ def shorten_url():
         conn.commit()
         conn.close()
         
-        # Return the new short link details back to the user
         return jsonify({
             "long_url": long_url,
             "short_url": f"http://localhost:5000/{short_code}",
             "short_code": short_code
         }), 201
     except sqlite3.IntegrityError:
-        return jsonify({"error": "Collision occurred, try again."}), 500
+        return jsonify({"error": "A conflict occurred, please try again."}), 500
 
 # --- ROUTE 3: REDIRECT FROM SHORT TO LONG ---
 @app.route('/<short_code>')
