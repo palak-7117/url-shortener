@@ -2,7 +2,7 @@
 
 A high-performance, responsive web application built with Flask (Python) and SQLite featuring a sleek, formal corporate user interface. SwiftURL lets users instantly shorten long links, create secure custom aliases, and dynamically generate high-quality QR codes for on-the-go scanning. Fully optimized with automated unit testing suites and local database path mapping.
 
-🎯 **Live Demo:** https://swifturl-25ex.onrender.com
+🎯 **Live Demo:** https://swifturls.onrender.com/
 
 ## ✨ Features
 
