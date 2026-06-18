@@ -3,371 +3,436 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SwiftURL | Professional URL Shortener</title>
+    <title>SwiftURL | Modern URL Shortener & QR</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --bg-primary: #0b0f19;
-            --bg-card: #151b2c;
+            /* --- FIXED: REPLACED CYBERPUNK WITH ENTERPRISE SLATE DARK PALETTE --- */
+            --bg-gradient: linear-gradient(135deg, #0b0f19 0%, #070a14 100%);
+            --card-bg: #151b2c;
+            --border-color: #1e293b;
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
-            --accent-color: #3b82f6;
-            --accent-hover: #2563eb;
-            --border-color: #1e293b;
-            --input-bg: #0f1423;
+            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            --accent-primary: #3b82f6;
+            --accent-secondary: #2563eb;
             --success-color: #22c55e;
-            --error-color: #ef4444;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
         }
 
         body {
-            background-color: var(--bg-primary);
-            /* Interactive Polka Dot Grid Background Mapping */
-            background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px);
-            background-size: 24px 24px;
-            background-position: 0px 0px;
-            color: var(--text-primary);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            margin: 0;
             padding: 20px;
-            overflow-x: hidden;
-            perspective: 1000px; /* Allows 3D floating effect */
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+            perspective: 1000px;
         }
+
+        #particleCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* --- FIXED: FORMAL AMBIENT BACKGROUND GLOWS --- */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            filter: blur(140px);
+            opacity: 0.08; /* Softened down for high-end look */
+            z-index: 0;
+        }
+        body::before { top: 10%; left: 15%; background: var(--accent-primary); }
+        body::after { bottom: 10%; right: 15%; background: var(--accent-secondary); }
 
         .container {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+            background: var(--card-bg);
             padding: 40px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.4);
             width: 100%;
-            max-width: 540px;
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
-            
-            /* Smooth transitions for tilting/floating calculations */
-            transform-style: preserve-3d;
-            transition: transform 0.1s cubic-bezier(0.25, 1, 0.5, 1);
-            will-change: transform;
-        }
-
-        header {
+            max-width: 520px;
             text-align: center;
-            margin-bottom: 32px;
-            transform: translateZ(30px); /* Pushes header outwards in 3D space */
+            z-index: 10;
+            box-sizing: border-box;
+            transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+            transform-style: preserve-3d;
         }
 
-        header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: -0.05em;
+        h1 {
             color: var(--text-primary);
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 0;
             margin-bottom: 8px;
-        }
-
-        header h1 span {
-            color: var(--accent-color);
-        }
-
-        header p {
-            color: var(--text-secondary);
-            font-size: 15px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
+            letter-spacing: -0.5px;
             transform: translateZ(20px);
         }
 
-        label {
+        h1 span {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 32px;
+            transform: translateZ(15px);
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+            transform: translateZ(10px);
+        }
+
+        .input-group label {
             display: block;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 6px;
             color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            margin-left: 4px;
         }
 
         input {
             width: 100%;
-            padding: 12px 16px;
-            font-size: 15px;
+            padding: 14px 16px;
+            background: #0f1423;
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            background-color: var(--input-bg);
             color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+            box-sizing: border-box;
             transition: all 0.2s ease;
         }
 
         input:focus {
             outline: none;
-            border-color: var(--accent-color);
+            border-color: var(--accent-primary);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            background: #111827;
         }
 
-        button {
-            width: 100%;
-            padding: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            background-color: var(--accent-color);
+        input::placeholder {
+            color: #475569;
+        }
+
+        button.submit-btn {
+            background: var(--accent-gradient);
             color: white;
             border: none;
+            padding: 15px;
             border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.2s ease;
-            margin-top: 8px;
-            transform: translateZ(25px);
-        }
-
-        button:hover {
-            background-color: var(--accent-hover);
-        }
-
-        .result-box {
-            margin-top: 28px;
-            padding: 20px;
-            background-color: var(--input-bg);
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            display: none;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+            transition: all 0.2s ease;
             transform: translateZ(15px);
         }
 
-        .result-box.active {
-            display: block;
+        button.submit-btn:hover {
+            transform: translateZ(20px) translateY(-1px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
         }
 
-        .result-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+        #result {
+            margin-top: 28px;
+            padding: 24px;
+            background: #0f1423;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            display: none;
+            box-sizing: border-box;
+            animation: fadeIn 0.4s ease forwards;
+            transform: translateZ(10px);
         }
 
-        .link-output {
+        .result-layout {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: var(--bg-card);
-            padding: 10px 14px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 16px;
+            gap: 20px;
+            text-align: left;
         }
 
-        .link-output a {
-            color: var(--accent-color);
-            font-weight: 500;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notice-msg {
+            color: var(--accent-primary);
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .output-link-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .output-label {
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .link-action-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 2px;
+        }
+
+        .short-url-link {
+            color: #60a5fa;
+            font-size: 18px;
+            font-weight: 600;
             text-decoration: none;
             word-break: break-all;
-            font-size: 15px;
         }
 
-        .link-output a:hover {
+        .short-url-link:hover {
+            color: #3b82f6;
             text-decoration: underline;
         }
 
         .copy-btn {
-            background: none;
-            color: var(--accent-color);
-            border: 1px solid var(--accent-color);
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
             padding: 6px 12px;
-            font-size: 13px;
-            border-radius: 4px;
-            width: auto;
-            margin-top: 0;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
         }
 
         .copy-btn:hover {
-            background-color: rgba(59, 130, 246, 0.1);
+            background: rgba(37, 99, 235, 0.15);
+            color: #3b82f6;
+            border-color: rgba(37, 99, 235, 0.4);
         }
 
-        .qr-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid var(--border-color);
+        .copy-btn.copied {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border-color: #22c55e;
         }
 
         .qr-wrapper {
             background: white;
-            padding: 12px;
+            padding: 8px;
             border-radius: 8px;
-            display: inline-block;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
         }
 
-        .message {
-            margin-top: 12px;
-            font-size: 14px;
-            text-align: center;
-            font-weight: 500;
+        .qr-wrapper img {
+            width: 110px;
+            height: 110px;
+            display: block;
         }
-        .message.error { color: var(--error-color); }
-        .message.success { color: var(--success-color); }
     </style>
 </head>
 <body>
 
-    <div class="container" id="interactiveCard">
-        <header>
-            <h1>Swift<span>URL</span></h1>
-            <p>Clean, instant link optimization and tracking</p>
-        </header>
+<canvas id="particleCanvas"></canvas>
 
-        <div class="form-group">
-            <label for="longUrl">Destination URL</label>
-            <input type="url" id="longUrl" placeholder="https://example.com/very-long-link-goes-here" required>
-        </div>
-
-        <div class="form-group">
-            <label for="customAlias">Custom Alias (Optional)</label>
-            <input type="text" id="customAlias" placeholder="e.g., portfolio">
-        </div>
-
-        <button id="shortenBtn" onclick="processShorten()">Shorten Link</button>
-
-        <div id="messageBox" class="message"></div>
-
-        <div id="resultBox" class="result-box">
-            <div class="result-title">Your Short Link</div>
-            <div class="link-output">
-                <a id="shortenedLink" href="#" target="_blank"></a>
-                <button class="copy-btn" onclick="copyToClipboard()">Copy</button>
-            </div>
-            <div class="qr-container">
-                <div class="result-title" style="margin-bottom: 8px;">QR Code</div>
-                <div class="qr-wrapper">
-                    <div id="qrcode"></div>
-                </div>
-            </div>
-        </div>
+<div class="container" id="tiltCard">
+    <h1>Swift<span>URL</span></h1>
+    <div class="subtitle">Shorten links & instantly generate QR codes</div>
+    
+    <div class="input-group">
+        <label for="longUrl">Destination URL</label>
+        <input type="url" id="longUrl" placeholder="https://example.com/very-long-link" required>
     </div>
+    
+    <div class="input-group">
+        <label for="customAlias">Custom Alias (Optional)</label>
+        <input type="text" id="customAlias" placeholder="e.g., myportfolio">
+    </div>
+    
+    <button onclick="shortenLink()" class="submit-btn">Shorten URL</button>
+    
+    <div id="result"></div>
+</div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script>
-        let qrInstance = null;
-        const card = document.getElementById('interactiveCard');
+<script>
+    // --- 1. MOVING POLKA-DOT BACKGROUND SYSTEM (Formal Blue-Slate Toned) ---
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
 
-        // --- MOUSE TRACKING MATRIX FOR FLOATING EFFECT ---
-        document.addEventListener('mousemove', (e) => {
-            const mouseX = e.clientX;
-            const mouseY = e.clientY;
+    let mouseX = 0, mouseY = 0, targetMouseX = 0, targetMouseY = 0;
+    const dots = [];
+    const dotSpacing = 45;
+    const baseRadius = 1.5;
 
-            // 1. Polka dot moving background tracking logic
-            // Shifts background slightly relative to cursor position
-            const moveX = mouseX * 0.03;
-            const moveY = mouseY * 0.03;
-            document.body.style.backgroundPosition = `${moveX}px ${moveY}px`;
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        initDots();
+    }
 
-            // 2. Main Box Floating/Tilting logic
-            const cardRect = card.getBoundingClientRect();
-            const cardCenterX = cardRect.left + cardRect.width / 2;
-            const cardCenterY = cardRect.top + cardRect.height / 2;
-
-            // Calculate offset vector distances
-            const deltaX = mouseX - cardCenterX;
-            const deltaY = mouseY - cardCenterY;
-
-            // Constrain angles to stay formal, smooth, and gentle (max 8 degrees tilt)
-            const rotateX = (-deltaY / cardRect.height) * 8;
-            const rotateY = (deltaX / cardRect.width) * 8;
-
-            card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(${-mouseY * 0.01}px)`;
-        });
-
-        // Reset positions smoothly when cursor leaves view window area
-        document.addEventListener('mouseleave', () => {
-            card.style.transform = 'rotateX(0deg) rotateY(0deg) translateY(0px)';
-        });
-
-        async function processShorten() {
-            const longUrl = document.getElementById('longUrl').value.trim();
-            const customAlias = document.getElementById('customAlias').value.trim();
-            const messageBox = document.getElementById('messageBox');
-            const resultBox = document.getElementById('resultBox');
-            const shortenBtn = document.getElementById('shortenBtn');
-
-            messageBox.className = "message";
-            messageBox.innerText = "";
-            resultBox.classList.remove('active');
-
-            if (!longUrl) {
-                messageBox.classList.add('error');
-                messageBox.innerText = "Please enter a valid destination URL.";
-                return;
-            }
-
-            shortenBtn.innerText = "Processing...";
-            shortenBtn.disabled = true;
-
-            try {
-                const response = await fetch('/shorten', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ long_url: longUrl, custom_alias: customAlias || null })
-                });
-
-                const data = await response.json();
-                shortenBtn.innerText = "Shorten Link";
-                shortenBtn.disabled = false;
-
-                if (!response.ok) {
-                    messageBox.classList.add('error');
-                    messageBox.innerText = data.error || "An unexpected error occurred.";
-                    return;
-                }
-
-                if (data.message) {
-                    messageBox.classList.add('success');
-                    messageBox.innerText = data.message;
-                }
-
-                const displayLink = document.getElementById('shortenedLink');
-                displayLink.href = data.real_url;
-                displayLink.innerText = data.real_url;
-
-                const qrDiv = document.getElementById('qrcode');
-                qrDiv.innerHTML = "";
-                qrInstance = new QRCode(qrDiv, {
-                    text: data.real_url,
-                    width: 140,
-                    height: 140,
-                    colorDark: "#0b0f19",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-
-                resultBox.classList.add('active');
-
-            } catch (err) {
-                shortenBtn.innerText = "Shorten Link";
-                shortenBtn.disabled = false;
-                messageBox.classList.add('error');
-                messageBox.innerText = "Connection failed. Please check your server status.";
+    class Dot {
+        constructor(x, y) { this.baseX = x; this.baseY = y; this.x = x; this.y = y; }
+        update() {
+            const dx = mouseX - this.baseX;
+            const dy = mouseY - this.baseY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const maxDistance = 180; 
+            if (distance < maxDistance) {
+                const force = (maxDistance - distance) / maxDistance;
+                this.x = this.baseX - (dx / distance) * force * 15;
+                this.y = this.baseY - (dy / distance) * force * 15;
+            } else {
+                this.x += (this.baseX - this.x) * 0.1;
+                this.y += (this.baseY - this.y) * 0.1;
             }
         }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, baseRadius, 0, Math.PI * 2);
+            /* FIXED: Changed polka dots color token from neon cyan to subtle professional dark-blue shadow */
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.12)';
+            ctx.fill();
+        }
+    }
 
-        function copyToClipboard() {
-            const linkText = document.getElementById('shortenedLink').href;
-            navigator.clipboard.writeText(linkText).then(() => {
-                const copyBtn = document.querySelector('.copy-btn');
-                copyBtn.innerText = "Copied!";
-                setTimeout(() => { copyBtn.innerText = "Copy"; }, 2000);
+    function initDots() {
+        dots.length = 0;
+        for (let x = dotSpacing / 2; x < canvas.width; x += dotSpacing) {
+            for (let y = dotSpacing / 2; y < canvas.height; y += dotSpacing) {
+                dots.push(new Dot(x, y));
+            }
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        mouseX += (targetMouseX - mouseX) * 0.08;
+        mouseY += (targetMouseY - mouseY) * 0.08;
+        dots.forEach(dot => { dot.update(); dot.draw(); });
+        requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('mousemove', (e) => { targetMouseX = e.clientX; targetMouseY = e.clientY; });
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    animate();
+
+    // --- 2. 3D TILT SYSTEM ---
+    const card = document.getElementById('tiltCard');
+    card.addEventListener('mousemove', (e) => {
+        const cardRect = card.getBoundingClientRect();
+        const cardX = e.clientX - cardRect.left - cardRect.width / 2;
+        const cardY = e.clientY - cardRect.top - cardRect.height / 2;
+        const angleX = -(cardY / cardRect.height) * 12; // Adjusted down slightly for professional fluidity
+        const angleY = (cardX / cardRect.width) * 12;
+        card.style.transform = `rotateX(${angleX}deg) rotateY(${angleY}deg) scale3d(1.01, 1.01, 1.01)`;
+        /* FIXED: Replaced pink cyberpunk drop shadows with crisp professional dark blue glow */
+        card.style.boxShadow = `${-angleY * 1.2}px ${angleX * 1.2}px 40px rgba(59, 130, 246, 0.15)`;
+    });
+    card.addEventListener('mouseleave', () => {
+        card.style.transform = 'rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+        card.style.boxShadow = '0 24px 50px rgba(0, 0, 0, 0.4)';
+    });
+
+    // --- 3. COPY TO CLIPBOARD ANIMATION ---
+    function copyLink(textToCopy, buttonElement) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            buttonElement.classList.add('copied');
+            buttonElement.innerText = "✓ Copied!";
+            setTimeout(() => {
+                buttonElement.classList.remove('copied');
+                buttonElement.innerText = "Copy";
+            }, 2000);
+        }).catch(err => { alert("Failed to copy link."); });
+    }
+
+    // --- 4. BACKEND FLASK CONNECTIONS ---
+    async function shortenLink() {
+        const longUrl = document.getElementById('longUrl').value;
+        const customAlias = document.getElementById('customAlias').value.trim();
+        const resultDiv = document.getElementById('result');
+        
+        if (!longUrl) {
+            alert("Please enter a URL first!");
+            return;
+        }
+
+        try {
+            const response = await fetch('/shorten', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ long_url: longUrl, custom_alias: customAlias })
             });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                resultDiv.style.display = "block";
+                let messageHtml = data.message ? `<div class="notice-msg">✨ Already mapped!</div>` : "";
+                const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(data.real_url)}`;
+
+                resultDiv.innerHTML = `
+                    ${messageHtml}
+                    <div class="result-layout">
+                        <div class="output-link-container">
+                            <div class="output-label">Your Shortened Link</div>
+                            <div class="link-action-row">
+                                <a href="${data.real_url}" target="_blank" class="short-url-link">${data.display_url}</a>
+                                <button class="copy-btn" onclick="copyLink('${data.real_url}', this)">Copy</button>
+                            </div>
+                        </div>
+                        <div class="qr-wrapper">
+                            <img src="${qrCodeUrl}" alt="Link QR Code">
+                        </div>
+                    </div>
+                `;
+            } else {
+                alert("Error: " + data.error);
+            }
+        } catch (err) {
+            alert("Could not connect to backend.");
         }
-    </script>
+    }
+</script>
+
 </body>
 </html>
