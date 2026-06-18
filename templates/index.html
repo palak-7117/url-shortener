@@ -30,6 +30,10 @@
 
         body {
             background-color: var(--bg-primary);
+            /* Interactive Polka Dot Grid Background Mapping */
+            background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+            background-position: 0px 0px;
             color: var(--text-primary);
             display: flex;
             flex-direction: column;
@@ -37,6 +41,8 @@
             align-items: center;
             min-height: 100vh;
             padding: 20px;
+            overflow-x: hidden;
+            perspective: 1000px; /* Allows 3D floating effect */
         }
 
         .container {
@@ -46,12 +52,18 @@
             padding: 40px;
             width: 100%;
             max-width: 540px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+            
+            /* Smooth transitions for tilting/floating calculations */
+            transform-style: preserve-3d;
+            transition: transform 0.1s cubic-bezier(0.25, 1, 0.5, 1);
+            will-change: transform;
         }
 
         header {
             text-align: center;
             margin-bottom: 32px;
+            transform: translateZ(30px); /* Pushes header outwards in 3D space */
         }
 
         header h1 {
@@ -73,6 +85,7 @@
 
         .form-group {
             margin-bottom: 20px;
+            transform: translateZ(20px);
         }
 
         label {
@@ -112,6 +125,7 @@
             cursor: pointer;
             transition: background-color 0.2s ease;
             margin-top: 8px;
+            transform: translateZ(25px);
         }
 
         button:hover {
@@ -125,6 +139,7 @@
             border-radius: 8px;
             border: 1px solid var(--border-color);
             display: none;
+            transform: translateZ(15px);
         }
 
         .result-box.active {
@@ -187,7 +202,6 @@
             border-top: 1px solid var(--border-color);
         }
 
-        /* High contrast border wrapper around QR Code so it looks clean in dark mode */
         .qr-wrapper {
             background: white;
             padding: 12px;
@@ -207,7 +221,7 @@
 </head>
 <body>
 
-    <div class="container">
+    <div class="container" id="interactiveCard">
         <header>
             <h1>Swift<span>URL</span></h1>
             <p>Clean, instant link optimization and tracking</p>
@@ -245,6 +259,39 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         let qrInstance = null;
+        const card = document.getElementById('interactiveCard');
+
+        // --- MOUSE TRACKING MATRIX FOR FLOATING EFFECT ---
+        document.addEventListener('mousemove', (e) => {
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            // 1. Polka dot moving background tracking logic
+            // Shifts background slightly relative to cursor position
+            const moveX = mouseX * 0.03;
+            const moveY = mouseY * 0.03;
+            document.body.style.backgroundPosition = `${moveX}px ${moveY}px`;
+
+            // 2. Main Box Floating/Tilting logic
+            const cardRect = card.getBoundingClientRect();
+            const cardCenterX = cardRect.left + cardRect.width / 2;
+            const cardCenterY = cardRect.top + cardRect.height / 2;
+
+            // Calculate offset vector distances
+            const deltaX = mouseX - cardCenterX;
+            const deltaY = mouseY - cardCenterY;
+
+            // Constrain angles to stay formal, smooth, and gentle (max 8 degrees tilt)
+            const rotateX = (-deltaY / cardRect.height) * 8;
+            const rotateY = (deltaX / cardRect.width) * 8;
+
+            card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(${-mouseY * 0.01}px)`;
+        });
+
+        // Reset positions smoothly when cursor leaves view window area
+        document.addEventListener('mouseleave', () => {
+            card.style.transform = 'rotateX(0deg) rotateY(0deg) translateY(0px)';
+        });
 
         async function processShorten() {
             const longUrl = document.getElementById('longUrl').value.trim();
