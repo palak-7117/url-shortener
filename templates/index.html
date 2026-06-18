@@ -9,15 +9,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #f8fafc;
-            --bg-card: #ffffff;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --accent-color: #2563eb;
-            --accent-hover: #1d4ed8;
-            --border-color: #e2e8f0;
-            --success-color: #16a34a;
-            --error-color: #dc2626;
+            --bg-primary: #0b0f19;
+            --bg-card: #151b2c;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --border-color: #1e293b;
+            --input-bg: #0f1423;
+            --success-color: #22c55e;
+            --error-color: #ef4444;
         }
 
         * {
@@ -45,7 +46,7 @@
             padding: 40px;
             width: 100%;
             max-width: 540px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         }
 
         header {
@@ -88,7 +89,7 @@
             font-size: 15px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            background-color: #ffffff;
+            background-color: var(--input-bg);
             color: var(--text-primary);
             transition: all 0.2s ease;
         }
@@ -96,7 +97,7 @@
         input:focus {
             outline: none;
             border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
         button {
@@ -120,7 +121,7 @@
         .result-box {
             margin-top: 28px;
             padding: 20px;
-            background-color: #f1f5f9;
+            background-color: var(--input-bg);
             border-radius: 8px;
             border: 1px solid var(--border-color);
             display: none;
@@ -143,7 +144,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: white;
+            background: var(--bg-card);
             padding: 10px 14px;
             border-radius: 6px;
             border: 1px solid var(--border-color);
@@ -174,7 +175,7 @@
         }
 
         .copy-btn:hover {
-            background-color: rgba(37, 99, 235, 0.05);
+            background-color: rgba(59, 130, 246, 0.1);
         }
 
         .qr-container {
@@ -186,12 +187,12 @@
             border-top: 1px solid var(--border-color);
         }
 
-        .qr-container img {
-            max-width: 150px;
+        /* High contrast border wrapper around QR Code so it looks clean in dark mode */
+        .qr-wrapper {
             background: white;
-            padding: 8px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
+            padding: 12px;
+            border-radius: 8px;
+            display: inline-block;
         }
 
         .message {
@@ -234,12 +235,13 @@
             </div>
             <div class="qr-container">
                 <div class="result-title" style="margin-bottom: 8px;">QR Code</div>
-                <div id="qrcode"></div>
+                <div class="qr-wrapper">
+                    <div id="qrcode"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- QR Code Generation script dependency -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         let qrInstance = null;
@@ -251,7 +253,6 @@
             const resultBox = document.getElementById('resultBox');
             const shortenBtn = document.getElementById('shortenBtn');
 
-            // Clear states
             messageBox.className = "message";
             messageBox.innerText = "";
             resultBox.classList.remove('active');
@@ -282,7 +283,6 @@
                     return;
                 }
 
-                // Success routing
                 if (data.message) {
                     messageBox.classList.add('success');
                     messageBox.innerText = data.message;
@@ -292,14 +292,13 @@
                 displayLink.href = data.real_url;
                 displayLink.innerText = data.real_url;
 
-                // Handle QR generation cleanly
                 const qrDiv = document.getElementById('qrcode');
                 qrDiv.innerHTML = "";
                 qrInstance = new QRCode(qrDiv, {
                     text: data.real_url,
                     width: 140,
                     height: 140,
-                    colorDark: "#0f172a",
+                    colorDark: "#0b0f19",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.H
                 });
