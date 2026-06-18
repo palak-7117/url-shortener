@@ -1,30 +1,81 @@
-# ⚡ SwiftURL | Professional URL Shortener & QR Generator
+# ⚡ SwiftURL | URL Shortener & QR Code Generator
 
-A high-performance, responsive web application built with Flask (Python) and SQLite featuring a sleek, formal corporate user interface. SwiftURL lets users instantly shorten long links, create secure custom aliases, and dynamically generate high-quality QR codes for on-the-go scanning. Fully optimized with automated unit testing suites and local database path mapping.
+A responsive full-stack web application built with Flask and SQLite. SwiftURL lets users shorten long URLs, create custom aliases, and generate QR codes instantly. Deployed live on Render with an automated backend test suite.
 
 🎯 **Live Demo:** https://swifturls.onrender.com/
 
+---
+
 ## ✨ Features
 
-- **🌌 Sleek Slate Blue UI:** Stunning modern aesthetics featuring premium slate-blue color variables, responsive background canvas configurations, and automated interactive 3D perspective tilting cards.
-- **🔗 Smart Link Shortening:** Deep logic engines that gracefully filter inputs, automatically append missing secure protocol headers (https://), and validate URLs.
-- **🏷️ Custom Routing Aliases:** Let users personalize their redirects while built-in security catches conflicts and duplicate database mapping.
-- **📱 Instant QR Code Generation:** Real-time generation of custom scan tags for mobile testing pipelines.
-- **🪐 Resilient Error Frameworks:** Fully customized thematic 404 views handling absolute system dead-ends rather than raw browser blocks.
+- **🔗 URL Shortening:** Automatically validates and sanitizes input URLs, appends missing `https://` protocol, and generates a unique 6-character short code.
+- **🏷️ Custom Aliases:** Users can define a personalized short code. Duplicate aliases pointing to different URLs are blocked with a clear error response.
+- **📱 QR Code Generation:** Instantly generates a scannable QR code for any shortened link.
+- **📊 Click Tracking:** Records the number of redirects per short code in the database.
+- **🪐 Custom 404 Page:** Invalid short codes serve a themed error page instead of a raw browser error.
+- **🌌 Interactive UI:** Slate-blue interface with a Canvas API cursor physics effect built in Vanilla JS.
 
-## 🛠️ Tech Stack & Architecture
+---
 
-- **Frontend:** HTML5, CSS3 Variables, JavaScript (Vanilla ES6), Canvas API (Polka-Dot Cursor Physics)
-- **Backend:** Python 3, Flask Microframework, Gunicorn (WSGI)
-- **Database:** SQLite3 (Structured File Relational Memory Engine)
-- **Testing:** Unittest (Python Automated Unit Testing Suite)
-- **Deployment:** Render (Cloud Container Hosting Platform)
+## 🛠️ Tech Stack
 
-## 🚀 Installation & Local Setup
+| Layer      | Technology                                    |
+|------------|-----------------------------------------------|
+| Frontend   | HTML5, CSS3, JavaScript (ES6), Canvas API     |
+| Backend    | Python 3, Flask, Gunicorn (WSGI)              |
+| Database   | SQLite3                                       |
+| Testing    | Python `unittest`                             |
+| Deployment | Render (Cloud Container)                      |
 
-Follow these steps to run SwiftURL locally on your computer:
+---
+
+## 🚀 Local Setup
 
 1. **Clone the repository:**
 ```bash
-   git clone [https://github.com/palak-7117/url-shortener.git](https://github.com/palak-7117/url-shortener.git)
+   git clone https://github.com/palak-7117/url-shortener.git
    cd url-shortener
+```
+
+2. **Install dependencies:**
+```bash
+   pip install -r requirements.txt
+```
+
+3. **Run the app:**
+```bash
+   python app.py
+```
+
+4. **Open in your browser:** http://localhost:5000
+---
+
+## 🧪 Running Tests
+
+```bash
+python test_app.py
+```
+
+The test suite covers 5 cases: homepage load, URL shortening, custom alias creation, duplicate alias rejection, and 404 handling. Each test runs against an isolated temporary database.
+
+---
+
+## 📁 Project Structure
+url-shortener/
+
+├── app.py              # Flask application & API routes
+
+├── test_app.py         # Automated unit test suite
+
+├── requirements.txt    # Python dependencies
+
+├── templates/          # HTML templates (index, 404)
+
+└── .gitignore
+---
+
+## ⚙️ Deployment Notes
+
+- SQLite database path is resolved using `os.path.abspath(__file__)` to prevent routing failures in Linux container environments on Render.
+- All database connections use Python context managers (`with sqlite3.connect()`) for safe, automatic connection handling.
+- App is served via **Gunicorn** in production instead of Flask's built-in dev server.
