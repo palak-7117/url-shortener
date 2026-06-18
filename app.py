@@ -11,19 +11,18 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_NAME = os.path.join(BASE_DIR, "urls.db")
 
 def init_db():
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS urls (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            long_url TEXT NOT NULL,
-            short_code TEXT UNIQUE NOT NULL,
-            clicks INTEGER DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(DB_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS urls (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                long_url TEXT NOT NULL,
+                short_code TEXT UNIQUE NOT NULL,
+                clicks INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        conn.commit()
 
 def generate_short_code(length=6):
     characters = string.ascii_letters + string.digits
@@ -60,16 +59,14 @@ def shorten_url():
         short_code = "".join(x for x in custom_alias if x.isalnum())
         if not short_code:
             return jsonify({"error": "Alias can only contain letters and numbers"}), 400
-            
-        conn = sqlite3.connect(DB_NAME)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        existing = cursor.execute("SELECT long_url FROM urls WHERE short_code = ?", (short_code,)).fetchone()
-        conn.close()
+        
+        with sqlite3.connect(DB_NAME) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            existing = cursor.execute("SELECT long_url FROM urls WHERE short_code = ?", (short_code,)).fetchone()
         
         if existing:
             if existing['long_url'] == long_url:
-                # Dynamic protocol detection helper for link rendering
                 base_url = request.host_url.rstrip('/')
                 return jsonify({
                     "message": "Hey! I already have this mapping.",
@@ -83,11 +80,10 @@ def shorten_url():
         short_code = generate_short_code()
     
     try:
-        conn = sqlite3.connect(DB_NAME)
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO urls (long_url, short_code) VALUES (?, ?)", (long_url, short_code))
-        conn.commit()
-        conn.close()
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO urls (long_url, short_code) VALUES (?, ?)", (long_url, short_code))
+            conn.commit()
         
         base_url = request.host_url.rstrip('/')
         return jsonify({
@@ -100,18 +96,16 @@ def shorten_url():
 
 @app.route('/<short_code>')
 def redirect_to_url(short_code):
-    conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    row = cursor.execute("SELECT long_url FROM urls WHERE short_code = ?", (short_code,)).fetchone()
+    with sqlite3.connect(DB_NAME) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        row = cursor.execute("SELECT long_url FROM urls WHERE short_code = ?", (short_code,)).fetchone()
+        
+        if row:
+            cursor.execute("UPDATE urls SET clicks = clicks + 1 WHERE short_code = ?", (short_code,))
+            conn.commit()
+            return redirect(row['long_url'], code=302)
     
-    if row:
-        cursor.execute("UPDATE urls SET clicks = clicks + 1 WHERE short_code = ?", (short_code,))
-        conn.commit()
-        conn.close()
-        return redirect(row['long_url'], code=302)
-    
-    conn.close()
     return render_template('404.html'), 404
 
 @app.errorhandler(404)
