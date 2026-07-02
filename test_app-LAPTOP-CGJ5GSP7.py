@@ -3,34 +3,48 @@ import unittest
 import sqlite3
 from app import app, DB_NAME
 
+import app as app_module
+
+TEST_DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_urls.db")
+
 class SwiftURLTestCase(unittest.TestCase):
 
-    def setUp(self):
-        """Runs BEFORE every single test. Sets up a temporary clean test database."""
+    @classmethod
+    def setUpClass(cls):
+        """Runs ONCE before all tests. Creates the test database."""
+        app_module.DB_NAME = TEST_DB
         app.config['TESTING'] = True
-        self.app = app.test_client()
-        
-        if os.path.exists(DB_NAME):
-            os.remove(DB_NAME)
-            
-        conn = sqlite3.connect(DB_NAME)
-        cursor = conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS urls (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                long_url TEXT NOT NULL,
-                short_code TEXT UNIQUE NOT NULL,
-                clicks INTEGER DEFAULT 0,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        conn.commit()
-        conn.close()
 
-    def tearDown(self):
-        """Runs AFTER every single test. Cleans up the test database file."""
-        if os.path.exists(DB_NAME):
-            os.remove(DB_NAME)
+        with sqlite3.connect(TEST_DB) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS urls (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    long_url TEXT NOT NULL,
+                    short_code TEXT UNIQUE NOT NULL,
+                    clicks INTEGER DEFAULT 0,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            conn.commit()
+
+    def setUp(self):
+        """Runs BEFORE every single test. Wipes table data for a clean slate."""
+        self.app = app.test_client()
+        with sqlite3.connect(TEST_DB) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM urls")
+            conn.commit()
+
+    @classmethod
+    def tearDownClass(cls):
+        """Runs ONCE after all tests. Restores original DB and deletes test DB."""
+        app_module.DB_NAME = DB_NAME
+        if os.path.exists(TEST_DB):
+            try:
+                os.remove(TEST_DB)
+            except PermissionError:
+                pass
 
     # --- TEST 1: Check if Homepage Loads ---
     def test_home_page_loads(self):
@@ -57,7 +71,6 @@ class SwiftURLTestCase(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 201)
         data = response.get_json()
-        # Updated to check the display_url values we actually return now
         self.assertEqual(data["display_url"], "swifturl.com/mygit")
 
     # --- TEST 4: Check duplicate custom alias protection ---
@@ -72,7 +85,6 @@ class SwiftURLTestCase(unittest.TestCase):
     def test_invalid_short_code_404(self):
         response = self.app.get('/thisCodeDoesNotExist')
         self.assertEqual(response.status_code, 404)
-        # Fixed case sensitivity to look for lower-case 'vanished' matching our template!
         self.assertIn(b'vanished into cyber space', response.data)
 
 if __name__ == '__main__':

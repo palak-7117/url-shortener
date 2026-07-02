@@ -10,7 +10,6 @@
     
     <style>
         :root {
-            /* --- FIXED: REPLACED CYBERPUNK WITH ENTERPRISE SLATE DARK PALETTE --- */
             --bg-gradient: linear-gradient(135deg, #0b0f19 0%, #070a14 100%);
             --card-bg: #151b2c;
             --border-color: #1e293b;
@@ -20,6 +19,7 @@
             --accent-primary: #3b82f6;
             --accent-secondary: #2563eb;
             --success-color: #22c55e;
+            --error-color: #ef4444;
         }
 
         body {
@@ -48,7 +48,6 @@
             pointer-events: none;
         }
 
-        /* --- FIXED: FORMAL AMBIENT BACKGROUND GLOWS --- */
         body::before, body::after {
             content: '';
             position: absolute;
@@ -56,7 +55,7 @@
             height: 350px;
             border-radius: 50%;
             filter: blur(140px);
-            opacity: 0.08; /* Softened down for high-end look */
+            opacity: 0.08;
             z-index: 0;
         }
         body::before { top: 10%; left: 15%; background: var(--accent-primary); }
@@ -135,6 +134,11 @@
             background: #111827;
         }
 
+        input.input-error {
+            border-color: var(--error-color);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+        }
+
         input::placeholder {
             color: #475569;
         }
@@ -159,6 +163,32 @@
         button.submit-btn:hover {
             transform: translateZ(20px) translateY(-1px);
             box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        button.submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #errorBox {
+            display: none;
+            margin-top: 16px;
+            padding: 14px 16px;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            border-radius: 8px;
+            color: #fca5a5;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: left;
+            box-sizing: border-box;
+            animation: fadeIn 0.3s ease forwards;
+            transform: translateZ(10px);
+        }
+
+        #errorBox strong {
+            color: var(--error-color);
         }
 
         #result {
@@ -288,8 +318,10 @@
         <input type="text" id="customAlias" placeholder="e.g., myportfolio">
     </div>
     
-    <button onclick="shortenLink()" class="submit-btn">Shorten URL</button>
-    
+    <button onclick="shortenLink()" class="submit-btn" id="submitBtn">Shorten URL</button>
+
+    <div id="errorBox"></div>
+
     <div id="result"></div>
 </div>
 
@@ -328,7 +360,6 @@
         draw() {
             ctx.beginPath();
             ctx.arc(this.x, this.y, baseRadius, 0, Math.PI * 2);
-            /* FIXED: Changed polka dots color token from neon cyan to subtle professional dark-blue shadow */
             ctx.fillStyle = 'rgba(59, 130, 246, 0.12)';
             ctx.fill();
         }
@@ -362,10 +393,9 @@
         const cardRect = card.getBoundingClientRect();
         const cardX = e.clientX - cardRect.left - cardRect.width / 2;
         const cardY = e.clientY - cardRect.top - cardRect.height / 2;
-        const angleX = -(cardY / cardRect.height) * 12; // Adjusted down slightly for professional fluidity
+        const angleX = -(cardY / cardRect.height) * 12;
         const angleY = (cardX / cardRect.width) * 12;
         card.style.transform = `rotateX(${angleX}deg) rotateY(${angleY}deg) scale3d(1.01, 1.01, 1.01)`;
-        /* FIXED: Replaced pink cyberpunk drop shadows with crisp professional dark blue glow */
         card.style.boxShadow = `${-angleY * 1.2}px ${angleX * 1.2}px 40px rgba(59, 130, 246, 0.15)`;
     });
     card.addEventListener('mouseleave', () => {
@@ -385,16 +415,44 @@
         }).catch(err => { alert("Failed to copy link."); });
     }
 
-    // --- 4. BACKEND FLASK CONNECTIONS ---
+    // --- 4. ERROR DISPLAY HELPERS ---
+    const errorBox = document.getElementById('errorBox');
+    const longUrlInput = document.getElementById('longUrl');
+
+    function showError(message) {
+        errorBox.innerHTML = `<strong>⚠ Invalid link:</strong> ${message}`;
+        errorBox.style.display = "block";
+        longUrlInput.classList.add('input-error');
+    }
+
+    function clearError() {
+        errorBox.style.display = "none";
+        errorBox.innerHTML = "";
+        longUrlInput.classList.remove('input-error');
+    }
+
+    // --- 5. BACKEND FLASK CONNECTIONS ---
     async function shortenLink() {
         const longUrl = document.getElementById('longUrl').value;
         const customAlias = document.getElementById('customAlias').value.trim();
         const resultDiv = document.getElementById('result');
-        
+        const submitBtn = document.getElementById('submitBtn');
+
+        clearError();
+        resultDiv.style.display = "none";
+
         if (!longUrl) {
-            alert("Please enter a URL first!");
+            showError("Please enter a URL first.");
             return;
         }
+
+        if (!(longUrl.startsWith('http://') || longUrl.startsWith('https://'))) {
+            showError("Invalid link. Please enter a URL which starts with http:// or https://");
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Checking...";
 
         try {
             const response = await fetch('/shorten', {
@@ -426,12 +484,18 @@
                     </div>
                 `;
             } else {
-                alert("Error: " + data.error);
+                showError(data.error);
             }
         } catch (err) {
-            alert("Could not connect to backend.");
+            showError("Could not connect to the server. Please try again.");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Shorten URL";
         }
     }
+
+    // Clear error as soon as the user starts fixing the input
+    longUrlInput.addEventListener('input', clearError);
 </script>
 
 </body>
