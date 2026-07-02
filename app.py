@@ -2,9 +2,11 @@ import os
 import sqlite3
 import random
 import string
+import urllib.request
+import urllib.parse
 from urllib.parse import urlparse
 import socket
-from flask import Flask, request, jsonify, redirect, render_template
+from flask import Flask, request, jsonify, redirect, render_template, Response
 
 app = Flask(__name__)
 
@@ -119,6 +121,32 @@ def shorten_url():
         }), 201
     except sqlite3.IntegrityError:
         return jsonify({"error": "A conflict occurred, please try again."}), 500
+
+@app.route('/qr-image')
+def qr_image_proxy():
+    """
+    Proxies the QR code image through our own server.
+    This avoids browser CORS restrictions when the front-end tries to
+    fetch() the image to copy it to the clipboard or download it,
+    since the image now comes from our own origin instead of a third
+    party domain (api.qrserver.com).
+    """
+    target_url = request.args.get('url', '')
+    if not target_url:
+        return jsonify({"error": "Missing url parameter"}), 400
+
+    qr_api_url = (
+        "https://api.qrserver.com/v1/create-qr-code/"
+        f"?size=300x300&data={urllib.parse.quote(target_url)}"
+    )
+
+    try:
+        with urllib.request.urlopen(qr_api_url, timeout=8) as resp:
+            image_bytes = resp.read()
+            content_type = resp.headers.get('Content-Type', 'image/png')
+        return Response(image_bytes, mimetype=content_type)
+    except Exception:
+        return jsonify({"error": "Could not generate QR code"}), 502
 
 @app.route('/<short_code>')
 def redirect_to_url(short_code):
