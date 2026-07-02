@@ -41,7 +41,7 @@ class SwiftURLTestCase(unittest.TestCase):
     # --- TEST 2: Check standard URL shortening ---
     def test_url_shortening_success(self):
         response = self.app.post('/shorten', json={
-            "long_url": "google.com"
+            "long_url": "https://google.com"
         })
         self.assertEqual(response.status_code, 201)
         data = response.get_json()
@@ -52,18 +52,18 @@ class SwiftURLTestCase(unittest.TestCase):
     # --- TEST 3: Check custom alias creation ---
     def test_custom_alias_success(self):
         response = self.app.post('/shorten', json={
-            "long_url": "github.com",
+            "long_url": "https://github.com",
             "custom_alias": "mygit"
         })
         self.assertEqual(response.status_code, 201)
         data = response.get_json()
-        # Updated to check the display_url values we actually return now
+        # Checks the display_url values we actually return now
         self.assertEqual(data["display_url"], "swifturl.com/mygit")
 
     # --- TEST 4: Check duplicate custom alias protection ---
     def test_duplicate_alias_error(self):
-        self.app.post('/shorten', json={"long_url": "site1.com", "custom_alias": "portfolio"})
-        response = self.app.post('/shorten', json={"long_url": "site2.com", "custom_alias": "portfolio"})
+        self.app.post('/shorten', json={"long_url": "https://site1.com", "custom_alias": "portfolio"})
+        response = self.app.post('/shorten', json={"long_url": "https://site2.com", "custom_alias": "portfolio"})
         self.assertEqual(response.status_code, 400)
         data = response.get_json()
         self.assertIn("error", data)
@@ -72,7 +72,9 @@ class SwiftURLTestCase(unittest.TestCase):
     def test_invalid_short_code_404(self):
         response = self.app.get('/thisCodeDoesNotExist')
         self.assertEqual(response.status_code, 404)
-        # Fixed case sensitivity to look for lower-case 'vanished' matching our template!
+        # NOTE: this string must exactly match the text inside your 404.html.
+        # I haven't seen that file yet, so double check this against your
+        # actual template before relying on this test passing.
         self.assertIn(b'vanished into cyber space', response.data)
 
 if __name__ == '__main__':
