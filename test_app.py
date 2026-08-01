@@ -72,9 +72,6 @@ class SwiftURLTestCase(unittest.TestCase):
     def test_invalid_short_code_404(self):
         response = self.app.get('/thisCodeDoesNotExist')
         self.assertEqual(response.status_code, 404)
-        # NOTE: this string must exactly match the text inside your 404.html.
-        # I haven't seen that file yet, so double check this against your
-        # actual template before relying on this test passing.
         self.assertIn(b'vanished into cyber space', response.data)
 
 if __name__ == '__main__':
